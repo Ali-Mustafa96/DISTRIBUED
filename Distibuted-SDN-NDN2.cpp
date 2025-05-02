@@ -103,7 +103,7 @@ main (int argc, char *argv[])
   NetDeviceContainer switchDevices;
   
   AnnotatedTopologyReader topologyReader("", 1);
-  topologyReader.SetFileName("src/ndnSIM/examples/topologies/topo-tree-Distribute.txt");
+  topologyReader.SetFileName("src/ndnSIM/examples/topologies/topo-tree-Distribute2.txt");
   topologyReader.Read();
   
      // Getting containers for the consumer/producer Pairs and the three Distributed controllers
