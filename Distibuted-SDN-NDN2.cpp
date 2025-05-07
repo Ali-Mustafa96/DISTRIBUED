@@ -147,9 +147,9 @@ main (int argc, char *argv[])
       swtch2.Install (switchNode3, switchDevices, controller3);
     }
 
-  // Add internet stack to the terminals
-  //InternetStackHelper internet;
-  //internet.Install (terminals);
+
+
+
   
   // Install NDN stack
     ndn::StackHelper ndnHelper;
@@ -206,15 +206,7 @@ main (int argc, char *argv[])
     ndn::AppDelayTracer::InstallAll ("Distributed-Delays-trace.txt"); //Delay
     
     L2RateTracer::InstallAll("Distributed-drop-trace.txt", Seconds(0.5)); //packet drop rate (overflow)
-  //
-  // Also configure some tcpdump traces; each interface will be traced.
-  // The output files will be named:
-  //     openflow-switch-<nodeId>-<interfaceId>.pcap
-  // and can be read by the "tcpdump -r" command (use "-tt" option to
-  // display timestamps correctly)
-  //
-  csma.EnablePcapAll ("openflow-switch", false);
-
+ 
   //
   // Now, do the actual simulation.
   //
@@ -224,7 +216,7 @@ main (int argc, char *argv[])
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
   #else
-  NS_LOG_INFO ("NS-3 OpenFlow is not enabled. Cannot run simulation.");
+  NS_LOG_INFO ("NS-3 OpenFlow NDN is not enabled. Cannot run simulation.");
   #endif // NS3_OPENFLOW
   
 }
