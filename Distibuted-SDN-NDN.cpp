@@ -187,13 +187,7 @@ main (int argc, char *argv[])
     
 
     L2RateTracer::InstallAll("Distributed-drop-trace.txt", Seconds(0.5)); //packet drop rate (overflow)
-  //
-  // Also configure some tcpdump traces; each interface will be traced.
-  // The output files will be named:
-  //     openflow-switch-<nodeId>-<interfaceId>.pcap
-  // and can be read by the "tcpdump -r" command (use "-tt" option to
-  // display timestamps correctly)
-  //
+
   csma.EnablePcapAll ("openflow-switch", false);
 
   //
@@ -205,7 +199,7 @@ main (int argc, char *argv[])
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
   #else
-  NS_LOG_INFO ("NS-3 OpenFlow is not enabled. Cannot run simulation.");
+  NS_LOG_INFO ("NS-3 OpenFlow NDN is not enabled. Cannot run simulation.");
   #endif // NS3_OPENFLOW
   
 }
