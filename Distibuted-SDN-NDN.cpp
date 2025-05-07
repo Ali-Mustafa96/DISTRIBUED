@@ -145,9 +145,9 @@ main (int argc, char *argv[])
       swtch2.Install (switchNode3, switchDevices, controller3);
     }
 
-  // Add internet stack to the terminals
-  //InternetStackHelper internet;
-  //internet.Install (terminals);
+
+
+
   
   // Install NDN stack
     ndn::StackHelper ndnHelper;
