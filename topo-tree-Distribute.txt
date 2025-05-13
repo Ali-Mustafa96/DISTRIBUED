@@ -49,4 +49,3 @@ rtr-8	    rtr-9	1Gbps		1	30ms	1000
 rtr-9	    leaf-2	1Gbps		1	30ms	1000
 
 
-
