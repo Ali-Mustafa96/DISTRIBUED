@@ -19,9 +19,9 @@
 //using namespace ns3;
 namespace ns3 {
 
+NS_LOG_COMPONENT_DEFINE ("Adding OpenFlowCsmaSwitchs to an NDN Senario");
 
 
-//ns3::PacketMetadata::Enable();
 
 bool verbose = false;
 bool use_drop = false;
@@ -83,32 +83,25 @@ main (int argc, char *argv[])
   
   NS_LOG_INFO ("Create nodes.");
   NodeContainer terminals;
-  terminals.Create (11); // 1 Producers & 1 Consumers and 9 NDN Node
+  terminals.Create (4); // 2 Producers & 2 Consumers 
 
-  NodeContainer SwitchContainer;
-  SwitchContainer.Create (3); //  3 OF Controllers
+  NodeContainer switchDevices;
+  switchDevices.Create (9); //  9 NDN Nodes
 
   NS_LOG_INFO ("Build Topology");
   CsmaHelper csma;
   csma.SetChannelAttribute ("DataRate", DataRateValue (1000000));
   
   csma.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (10)));
-  // the priviose two lines are similar to :
-       // setting default parameters for PointToPoint links and channels
-       //Config::SetDefault("ns3::PointToPointNetDevice::DataRate", StringValue("1Mbps"));
-       //Config::SetDefault("ns3::PointToPointChannel::Delay", StringValue("10ms"));
-
-  // Create the csma links, from each producers to Controller 0
-  NetDeviceContainer terminalDevices;
-  NetDeviceContainer switchDevices;
-  
+ 
+ 
   AnnotatedTopologyReader topologyReader("", 1);
   topologyReader.SetFileName("src/ndnSIM/examples/topologies/topo-tree-Distribute.txt");
   topologyReader.Read();
   
-     // Getting containers for the consumer/producer and controller Cont1
-  Ptr<Node> consumer = Names::Find<Node>("leaf-1");
-  Ptr<Node> producer = Names::Find<Node>("leaf-2");
+     // Getting containers for the consumer/producer Pairs and the three Distributed controllers
+  Ptr<Node> consumer1 = Names::Find<Node>("leaf-1");
+  Ptr<Node> consumer2 = Names::Find<Node>("leaf-2");
   Ptr<Node> switchNode1 = Names::Find<Node>("Cont0"); // The controller Cont0 node
   Ptr<Node> switchNode2= Names::Find<Node>("Cont1");  // The controller Cont1 node
   Ptr<Node> switchNode3= Names::Find<Node>("Cont2");  // The controller Cont2 node
@@ -142,33 +135,51 @@ main (int argc, char *argv[])
       
       Ptr<ns3::ofi::LearningController> controller3 = CreateObject<ns3::ofi::LearningController> ();
       if (!timeout.IsZero ()) controller3->SetAttribute ("ExpirationTime", TimeValue (timeout));
-      swtch2.Install (switchNode3, switchDevices, controller3);
+      swtch3.Install (switchNode3, switchDevices, controller3);
     }
 
-
-
-
+  
   
   // Install NDN stack
     ndn::StackHelper ndnHelper;
     ndnHelper.SetDefaultRoutes(true);
     ndnHelper.InstallAll();
     
-    //  Set up producer application
+   // Create NDN applications (The Consumers)
+
+  // on the first consumer node install a Consumer application
+  // that will express interests in /example/data1 namespace
+  
+  ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
+  consumerHelper.SetAttribute("Frequency", StringValue("100"));    // 100  interests per second
+  consumerHelper.SetAttribute("LifeTime", TimeValue(Seconds(100.0)));
+  consumerHelper.SetPrefix("/example/data1");
+  ApplicationContainer consumerApps1 = consumerHelper.Install(consumer1); // Install Consumer1 on sender1
+
+  // on the second consumer node install a Consumer application
+  // that will express interests in /example/data2 namespace
+  consumerHelper.SetPrefix("/example/data2");
+  ApplicationContainer consumerApps2 = consumerHelper.Install(consumer2); // Install Consumer2 on sender2
+
+
+// Create NDN applications (The Producers)
     ndn::AppHelper producerHelper("ns3::ndn::Producer");
-    // Producer1 will reply to all requests starting with /example/data
-    producerHelper.SetPrefix("/example/data");
-    producerHelper.SetAttribute("PayloadSize", StringValue("10240"));
-    producerHelper.Install(producer); // Install on the producer node
+    producerHelper.SetAttribute("PayloadSize", StringValue("102400"));    //100 MB payload. the unit here is kB
+    
 
-      
+  // Register /example/data1 prefix with global routing controller and
+  // install producer that will satisfy Interests in /example/data1 namespace
+  ndnGlobalRoutingHelper.AddOrigins("/example/data1", producer1);
+  producerHelper.SetPrefix("/example/data1"); 
+  producerHelper.Install(producer1); // Install Producer1 on receiver1
 
-    //  Set up consumer application
-    ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
-    consumerHelper.SetPrefix("/example/data");
-    consumerHelper.SetAttribute("Frequency", StringValue("10")); // Interest frequency within a second
-    auto apps1 =consumerHelper.Install(consumer); // Install on the consumer 1 node
-   
+  // Register /example/data2 prefix with global routing controller and
+  // install producer that will satisfy Interests in /example/data2 namespace
+  ndnGlobalRoutingHelper.AddOrigins("/example/data2", producer2);
+  producerHelper.SetPrefix("/example/data2");
+  producerHelper.Install(producer2); // Install Producer2 on receiver2
+
+
     apps1.Stop(Seconds(100.0)); 
 
     // Choosing forwarding strategy
@@ -177,18 +188,16 @@ main (int argc, char *argv[])
     
     ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
     ndnGlobalRoutingHelper.InstallAll();
- 
-  NS_LOG_INFO ("Configure Tracing.");
-
+    
 
 // Metrics:
     
     ndn::AppDelayTracer::InstallAll ("Distributed-Delays-trace.txt"); //Delay
     
-
     L2RateTracer::InstallAll("Distributed-drop-trace.txt", Seconds(0.5)); //packet drop rate (overflow)
+  
+  
 
-  csma.EnablePcapAll ("openflow-switch", false);
 
   //
   // Now, do the actual simulation.
@@ -211,7 +220,6 @@ main(int argc, char* argv[])
 {
   return ns3::main(argc, argv);
 }
-
 
 
 
