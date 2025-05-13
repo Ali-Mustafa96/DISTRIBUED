@@ -83,22 +83,18 @@ main (int argc, char *argv[])
   
   NS_LOG_INFO ("Create nodes.");
   NodeContainer terminals;
-  terminals.Create (13); // 2 Producers & 2 Consumers and 9 NDN Node
+  terminals.Create (4); // 2 Producers & 2 Consumers 
 
-  NodeContainer SwitchContainer;
-  SwitchContainer.Create (3); //  3 OF Controllers
+  NodeContainer switchDevices;
+  switchDevices.Create (9); //  9 NDN Nodes
 
   NS_LOG_INFO ("Build Topology");
   CsmaHelper csma;
   csma.SetChannelAttribute ("DataRate", DataRateValue (1000000));
   
   csma.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (10)));
-  // the priviose two lines are similar to :
-       // setting default parameters for PointToPoint links and channels
-       //Config::SetDefault("ns3::PointToPointNetDevice::DataRate", StringValue("1Mbps"));
-       //Config::SetDefault("ns3::PointToPointChannel::Delay", StringValue("10ms"));
-
-  // Create the csma links, from each producers to Controller 0
+ 
+ 
   NetDeviceContainer terminalDevices;
   NetDeviceContainer switchDevices;
   
@@ -144,10 +140,8 @@ main (int argc, char *argv[])
       
       Ptr<ns3::ofi::LearningController> controller3 = CreateObject<ns3::ofi::LearningController> ();
       if (!timeout.IsZero ()) controller3->SetAttribute ("ExpirationTime", TimeValue (timeout));
-      swtch2.Install (switchNode3, switchDevices, controller3);
+      swtch3.Install (switchNode3, switchDevices, controller3);
     }
-
-
 
 
   
@@ -207,6 +201,10 @@ main (int argc, char *argv[])
     
     L2RateTracer::InstallAll("Distributed-drop-trace.txt", Seconds(0.5)); //packet drop rate (overflow)
  
+ 
+  //
+  csma.EnablePcapAll ("openflow-switch", false);
+
   //
   // Now, do the actual simulation.
   //
@@ -228,7 +226,6 @@ main(int argc, char* argv[])
 {
   return ns3::main(argc, argv);
 }
-
 
 
 
